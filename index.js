@@ -6,22 +6,37 @@ const cors = require('cors');
 const app = express();
 
 const allowedOrigins = [
+  'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app',
   'http://localhost:4200'
-  // ,'https://testdeploy-rosy.vercel.app'
 ];
 
 // Configuración de CORS
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
   credentials: true
 }));
 
 const server = http.createServer(app);
+// const io = new Server(server, {
+//   cors: {
+//     origin: allowedOrigins,
+//     methods: ['GET', 'POST']
+//   }
+// });
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
