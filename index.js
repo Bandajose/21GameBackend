@@ -11,7 +11,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-      origin: ['http://localhost:4200', 'http://localhost:3000'],  // Lista de orígenes permitidos
+      origin: ['http://localhost:4200', 'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app/'],  // Lista de orígenes permitidos
       methods: ['GET', 'POST']
     }
   });
