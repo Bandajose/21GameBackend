@@ -5,6 +5,11 @@ const cors = require('cors');
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log('Solicitud recibida desde:', req.headers.origin);
+  next();
+});
+
 const allowedOrigins = [
   'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app',
   'http://localhost:4200'
