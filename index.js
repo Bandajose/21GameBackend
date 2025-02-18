@@ -7,7 +7,7 @@ const cors = require('cors');
 const app = express();
 
 const allowedOrigins = [
-  'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app', // Frontend en Vercel
+  'https://testdeploy-rosy.vercel.app/', // Frontend en Vercel
   'http://localhost:4200'  // Para desarrollo local con Angular
 ];
 
