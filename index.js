@@ -7,11 +7,11 @@ const cors = require('cors');
 const app = express();
 
 const allowedOrigins = [
-  'https://testdeploy-rosy.vercel.app/', // Frontend en Vercel
+  'https://testdeploy-rosy.vercel.app', // Frontend en Vercel
   'http://localhost:4200'  // Para desarrollo local con Angular
 ];
 
-// 🔴 Configuración de CORS para Express
+//  Configuración de CORS para Express
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST'],
