@@ -6,8 +6,8 @@ const cors = require('cors');
 const app = express();
 
 const allowedOrigins = [
-  'http://localhost:4200',
-  'https://testdeploy-rosy.vercel.app'
+  'http://localhost:4200'
+  // ,'https://testdeploy-rosy.vercel.app'
 ];
 
 // Configuración de CORS
