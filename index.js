@@ -67,6 +67,11 @@ io.on('connection', (socket) => {
   });
 });
 
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});
+
 function createDeck() {
   const suits = ['♥', '♦', '♣', '♠'];
   const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
