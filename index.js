@@ -6,15 +6,26 @@ const cors = require('cors');
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app', // Frontend en Vercel
+  'http://localhost:4200'  // Para desarrollo local con Angular
+];
+
+// 🔴 Configuración de CORS para Express
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-      origin: ['https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app'],  // Lista de orígenes permitidos
-      methods: ['GET', 'POST']
-    }
-  });
+  cors: {
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
 let rooms = {};
 
@@ -67,10 +78,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// const PORT = process.env.PORT || 4000;
-// server.listen(PORT, () => {
-//   console.log(`Servidor corriendo en el puerto ${PORT}`);
-// });
 
 function createDeck() {
   const suits = ['♥', '♦', '♣', '♠'];
@@ -111,6 +118,7 @@ function dealCards(roomCode) {
   });
 }
 
-server.listen(4000, () => {
-  console.log('Servidor corriendo en http://localhost:4000');
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
