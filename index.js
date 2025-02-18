@@ -1,4 +1,3 @@
-// backend/index.js
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -7,11 +6,11 @@ const cors = require('cors');
 const app = express();
 
 const allowedOrigins = [
-  'https://testdeploy-rosy.vercel.app', // Frontend en Vercel
-  'http://localhost:4200'  // Para desarrollo local con Angular
+  'http://localhost:4200',
+  'https://testdeploy-rosy.vercel.app'
 ];
 
-//  Configuración de CORS para Express
+// Configuración de CORS
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST'],
@@ -22,8 +21,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true
+    methods: ['GET', 'POST']
   }
 });
 
