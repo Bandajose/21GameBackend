@@ -30,41 +30,51 @@ io.on("connection", (socket) => {
         if (room.players.length >= 6) return callback({ success: false, message: "Sala llena" });
         if (room.gameStarted) return callback({ success: false, message: "Partida en curso" });
         
-        room.players.push(socket.id);
+        room.players.push({ id: socket.id, hand: [] });
         socket.join(roomName);
-        callback({ success: true, message: "Unido a la sala" });
-        io.to(roomName).emit("updatePlayers", room.players);
+        callback({ success: true, message: "Unido a la sala", playerId: socket.id });
+        io.to(roomName).emit("updatePlayers", room.players.map(p => p.id));
     });
 
     socket.on("startGame", (roomName) => {
         let room = rooms[roomName];
-        if (!room || room.players.length < 4 || room.gameStarted) return;
+        if (!room || room.players.length < 2 || room.gameStarted) return;
         
         room.gameStarted = true;
         room.deck = generateDeck();
         room.turnIndex = 0;
-
+        
+        // Repartir cartas a cada jugador
+        const handSize = 5;
+        room.players.forEach(player => {
+            player.hand = room.deck.splice(0, handSize);
+        });
+        
         io.to(roomName).emit("gameStarted", { deckSize: room.deck.length });
-        io.to(roomName).emit("playerTurn", room.players[room.turnIndex]);
+        io.to(roomName).emit("playerTurn", room.players[room.turnIndex].id);
     });
 
     socket.on("playTurn", (roomName, playerId, card) => {
         let room = rooms[roomName];
         if (!room || !room.gameStarted) return;
-        if (room.players[room.turnIndex] !== playerId) return;
+        let currentPlayer = room.players[room.turnIndex];
+        if (currentPlayer.id !== playerId) return;
         
-        // Simular lógica de juego
+        // Eliminar la carta jugada
+        currentPlayer.hand = currentPlayer.hand.filter(c => c !== card);
+        
+        // Avanzar el turno
         room.turnIndex = (room.turnIndex + 1) % room.players.length;
-        io.to(roomName).emit("playerTurn", room.players[room.turnIndex]);
+        io.to(roomName).emit("playerTurn", room.players[room.turnIndex].id);
     });
 
     socket.on("disconnect", () => {
         console.log("Usuario desconectado", socket.id);
         for (const roomName in rooms) {
             let room = rooms[roomName];
-            room.players = room.players.filter(player => player !== socket.id);
+            room.players = room.players.filter(player => player.id !== socket.id);
             if (room.players.length === 0) delete rooms[roomName];
-            io.to(roomName).emit("updatePlayers", room.players);
+            io.to(roomName).emit("updatePlayers", room.players.map(p => p.id));
         }
         io.emit("updateRooms", Object.keys(rooms));
     });
