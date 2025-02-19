@@ -58,7 +58,11 @@ io.on("connection", (socket) => {
         let firstPlayer = room.players[room.turnIndex].id;
         console.log("🎲 Partida iniciada. Primer turno para:", firstPlayer);
     
-        io.to(roomName).emit("gameStarted", { deckSize: room.deck.length, currentTurn: firstPlayer });
+        // Enviar la información solo al jugador correspondiente
+        room.players.forEach(player => {
+            io.to(player.id).emit("gameStarted", { hand: player.hand, currentTurn: firstPlayer });
+        });
+    
         io.to(roomName).emit("playerTurn", firstPlayer);
     });
   
