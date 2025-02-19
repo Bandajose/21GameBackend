@@ -58,11 +58,7 @@ io.on("connection", (socket) => {
         let firstPlayer = room.players[room.turnIndex].id;
         console.log("🎲 Partida iniciada. Primer turno para:", firstPlayer);
     
-        // Enviar la información solo al jugador correspondiente
-        room.players.forEach(player => {
-            io.to(player.id).emit("gameStarted", { hand: player.hand, currentTurn: firstPlayer });
-        });
-    
+        io.to(roomName).emit("gameStarted", { deckSize: room.deck.length, currentTurn: firstPlayer });
         io.to(roomName).emit("playerTurn", firstPlayer);
     });
   
@@ -112,3 +108,40 @@ io.on("connection", (socket) => {
   });
     
     // Función para obtener el valor y palo de la carta
+    function parseCard(card) {
+        const match = card.match(/(\d+|[JQKA])([♠♥♦♣])/);
+        return match ? [match[1], match[2]] : [null, null];
+    }
+  
+    // Función para verificar si el juego terminó
+    function checkGameEnd(room) {
+      if (room.deck.length === 0) {
+          io.to(roomName).emit("gameOver", { winner: true });
+          return true;
+      }
+      return false;
+  }
+
+    socket.on("disconnect", () => {
+        console.log("Usuario desconectado", socket.id);
+        for (const roomName in rooms) {
+            let room = rooms[roomName];
+            room.players = room.players.filter(player => player.id !== socket.id);
+            if (room.players.length === 0) delete rooms[roomName];
+            io.to(roomName).emit("updatePlayers", room.players.map(p => p.id));
+        }
+        io.emit("updateRooms", Object.keys(rooms));
+    });
+});
+
+function generateDeck() {
+    return ["A♠", "2♠", "3♠", "4♠", "5♠", "6♠", "7♠", "8♠", "9♠", "10♠", "J♠", "Q♠", "K♠"].concat(
+        ["A♥", "2♥", "3♥", "4♥", "5♥", "6♥", "7♥", "8♥", "9♥", "10♥", "J♥", "Q♥", "K♥"],
+        ["A♦", "2♦", "3♦", "4♦", "5♦", "6♦", "7♦", "8♦", "9♦", "10♦", "J♦", "Q♦", "K♦"],
+        ["A♣", "2♣", "3♣", "4♣", "5♣", "6♣", "7♣", "8♣", "9♣", "10♣", "J♣", "Q♣", "K♣"]
+    );
+}
+
+server.listen(3000, () => {
+    console.log("Servidor corriendo en http://localhost:3000");
+});
