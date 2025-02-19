@@ -11,7 +11,7 @@ app.use((req, res, next) => {
 });
 
 const allowedOrigins = [
-  'https://testdeploy-nftdpa4qh-jose-bandas-projects.vercel.app',
+  'https://testdeploy-rosy.vercel.app/',
   'http://localhost:4200'
 ];
 
@@ -30,12 +30,6 @@ app.use(cors({
 }));
 
 const server = http.createServer(app);
-// const io = new Server(server, {
-//   cors: {
-//     origin: allowedOrigins,
-//     methods: ['GET', 'POST']
-//   }
-// });
 
 const io = new Server(server, {
   cors: {
