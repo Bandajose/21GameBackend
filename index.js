@@ -6,13 +6,13 @@ const cors = require('cors');
 const app = express();
 
 app.use((req, res, next) => {
-  console.log('Solicitud recibida desde:', req.headers.origin);
+  console.log('Solicitud recibida desdes:', req.headers.origin);
   next();
 });
 
 const allowedOrigins = [
   'https://testdeploy-rosy.vercel.app/',
-  'http://localhost:4200'
+  'http://localhost:4200',
 ];
 
 // Configuración de CORS
