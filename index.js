@@ -29,44 +29,98 @@ io.on("connection", (socket) => {
         if (!room) return callback({ success: false, message: "Sala no encontrada" });
         if (room.players.length >= 6) return callback({ success: false, message: "Sala llena" });
         if (room.gameStarted) return callback({ success: false, message: "Partida en curso" });
-        
-        room.players.push({ id: socket.id, hand: [] });
+    
+        let player = { id: socket.id, hand: [] };
+        room.players.push(player);
         socket.join(roomName);
-        callback({ success: true, message: "Unido a la sala", playerId: socket.id });
+    
+        console.log("🆔 Jugador unido con ID:", socket.id, " en sala:", roomName); // 🔍 Debug en el servidor
+    
+        callback({ success: true, message: "Unido a la sala", playerId: socket.id }); // 👈 Se envía el ID al frontend
         io.to(roomName).emit("updatePlayers", room.players.map(p => p.id));
     });
+    
 
     socket.on("startGame", (roomName) => {
         let room = rooms[roomName];
         if (!room || room.players.length < 2 || room.gameStarted) return;
-        
+    
         room.gameStarted = true;
         room.deck = generateDeck();
         room.turnIndex = 0;
-        
-        // Repartir cartas a cada jugador
+    
         const handSize = 5;
         room.players.forEach(player => {
             player.hand = room.deck.splice(0, handSize);
+            console.log(`🃏 Cartas para ${player.id}:`, player.hand); // 🔍 Debug
         });
-        
-        io.to(roomName).emit("gameStarted", { deckSize: room.deck.length });
-        io.to(roomName).emit("playerTurn", room.players[room.turnIndex].id);
+    
+        let firstPlayer = room.players[room.turnIndex].id;
+        console.log("🎲 Partida iniciada. Primer turno para:", firstPlayer);
+    
+        io.to(roomName).emit("gameStarted", { deckSize: room.deck.length, currentTurn: firstPlayer });
+        io.to(roomName).emit("playerTurn", firstPlayer);
     });
+  
 
     socket.on("playTurn", (roomName, playerId, card) => {
-        let room = rooms[roomName];
-        if (!room || !room.gameStarted) return;
-        let currentPlayer = room.players[room.turnIndex];
-        if (currentPlayer.id !== playerId) return;
-        
-        // Eliminar la carta jugada
-        currentPlayer.hand = currentPlayer.hand.filter(c => c !== card);
-        
-        // Avanzar el turno
-        room.turnIndex = (room.turnIndex + 1) % room.players.length;
-        io.to(roomName).emit("playerTurn", room.players[room.turnIndex].id);
-    });
+      let room = rooms[roomName];
+      if (!room || !room.gameStarted) return;
+      let currentPlayer = room.players[room.turnIndex];
+  
+      if (currentPlayer.id !== playerId) return; // Solo el jugador en turno puede jugar
+  
+      // Obtener número y palo de la carta
+      const [value, suit] = parseCard(card);
+      let effectMessage = "";
+  
+      // Aplicar efectos según el palo
+      if (suit === "♠") {
+          effectMessage = "El daño enemigo fue bloqueado.";
+      } else if (suit === "♥") {
+          effectMessage = "El mazo ha sido curado.";
+      } else if (suit === "♦") {
+          effectMessage = "Robaste 2 cartas.";
+          currentPlayer.hand.push(...room.deck.splice(0, 2)); // Roba 2 cartas
+      } else if (suit === "♣") {
+          effectMessage = "El daño se duplicó.";
+      }
+  
+      // Emitir efecto de la carta a todos los jugadores
+      io.to(roomName).emit("cardEffect", effectMessage);
+  
+      // Eliminar la carta jugada de la mano del jugador
+      currentPlayer.hand = currentPlayer.hand.filter(c => c !== card);
+  
+      // Verificar si la partida termina
+      if (checkGameEnd(room)) {
+          io.to(roomName).emit("gameOver", { winner: true });
+          return;
+      }
+  
+      // Avanzar el turno al siguiente jugador
+      room.turnIndex = (room.turnIndex + 1) % room.players.length;
+      let nextPlayer = room.players[room.turnIndex].id;
+
+      console.log("🔄 Nuevo turno para:", nextPlayer); // 🔍 Debug en servidor
+
+      io.to(roomName).emit("playerTurn", nextPlayer);
+  });
+    
+    // Función para obtener el valor y palo de la carta
+    function parseCard(card) {
+        const match = card.match(/(\d+|[JQKA])([♠♥♦♣])/);
+        return match ? [match[1], match[2]] : [null, null];
+    }
+  
+    // Función para verificar si el juego terminó
+    function checkGameEnd(room) {
+      if (room.deck.length === 0) {
+          io.to(roomName).emit("gameOver", { winner: true });
+          return true;
+      }
+      return false;
+  }
 
     socket.on("disconnect", () => {
         console.log("Usuario desconectado", socket.id);
